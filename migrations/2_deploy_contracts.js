@@ -1,5 +1,3 @@
-const Marketplace = artifacts.require("Marketplace");
+const metacoin = artifacts.require("Metacoin");
 
-module.exports = function(deployer) {
-  deployer.deploy(Marketplace);
-};
+module.exports = function(deployer) {};

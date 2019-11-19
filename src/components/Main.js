@@ -1,38 +1,65 @@
 import React, { Component } from 'react';
+const contract = require('@truffle/contract')
+const MyContractJSON = require('../abis/MetaCoin.json')
+const Web3 = require("web3")
 
 class Main extends Component {
+
+  createContract = (account) => {
+    
+    const provider = new Web3.providers.HttpProvider("http://localhost:8545")
+
+    const MyContract = contract(MyContractJSON)
+    MyContract.setProvider(provider)
+
+    MyContract.new({ from: account }).then(instance => {
+      console.log('contract created! :)')
+    }).catch(err => {
+      console.log('error', err)
+    })
+  }
 
   render() {
     return (
       <div id="content">
-        <h1>Add Product</h1>
+        <h1>Application</h1>
         <form onSubmit={(event) => {
           event.preventDefault()
-          const name = this.productName.value
-          const price = window.web3.utils.toWei(this.productPrice.value.toString(), 'Ether')
-          this.props.createProduct(name, price)
+          const earnings = this.earnings.value
+          const capital = this.capital.value
+          const loanAmount = window.web3.utils.toWei(this.loanAmount.value.toString(), 'Ether')
+          this.props.createContract()
         }}>
           <div className="form-group mr-sm-2">
             <input
-              id="productName"
+              id="earnings"
               type="text"
-              ref={(input) => { this.productName = input }}
+              ref={(input) => { this.earnings = input }}
               className="form-control"
-              placeholder="Product Name"
+              placeholder="Earnings"
               required />
           </div>
           <div className="form-group mr-sm-2">
             <input
-              id="productPrice"
+              id="capital"
               type="text"
-              ref={(input) => { this.productPrice = input }}
+              ref={(input) => { this.capital = input }}
               className="form-control"
-              placeholder="Product Price"
+              placeholder="Capital"
               required />
           </div>
-          <button type="submit" className="btn btn-primary">Add Product</button>
+          <div className="form-group mr-sm-2">
+            <input
+              id="loanAmount"
+              type="text"
+              ref={(input) => { this.loanAmount = input }}
+              className="form-control"
+              placeholder="Loan Amount"
+              required />
+          </div>
+          <button type="submit" className="btn btn-primary" onClick={this.createContract()}>Submit Application</button>
         </form>
-        <p>&nbsp;</p>
+        {/* <p>&nbsp;</p>
         <h2>Buy Product</h2>
         <table className="table">
           <thead>
@@ -70,7 +97,7 @@ class Main extends Component {
               )
             })}
           </tbody>
-        </table>
+        </table> */}
       </div>
     );
   }
