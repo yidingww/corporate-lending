@@ -84,7 +84,7 @@ class App extends Component {
                                 ? <div id="loader" className="text-center"><p className="text-center">Loading...</p></div>
                                 : <Main 
                                     account={this.state.account}
-                                    createContract={this.createContract}/>
+                                    />
                             }
                             {/* <button onClick={this.createContract(this.state.account)}>Create Contract</button> */}
                         </main>

@@ -1,21 +1,17 @@
 import React, { Component } from 'react';
 const contract = require('@truffle/contract')
-const MyContractJSON = require('../abis/MetaCoin.json')
+const MyContractJSON = require('../abis/CorporateLending.json')
 const Web3 = require("web3")
+
 
 class Main extends Component {
 
-  createContract = (account) => {
-    
-    const provider = new Web3.providers.HttpProvider("http://localhost:8545")
-
-    const MyContract = contract(MyContractJSON)
-    MyContract.setProvider(provider)
-
-    MyContract.new({ from: account }).then(instance => {
-      console.log('contract created! :)')
-    }).catch(err => {
-      console.log('error', err)
+  createContract = (account, loanAmount, earnings, capital) => {
+    const web3=new Web3("http://localhost:8545")
+    web3.eth.getAccounts().then(accounts => {
+      //accounts[2] is the lender/bank's account
+      console.log(accounts,"----------------------------------------")
+      this.createContractInner(accounts[2], account, loanAmount, earnings, capital)
     })
   }
 
@@ -28,7 +24,7 @@ class Main extends Component {
           const earnings = this.earnings.value
           const capital = this.capital.value
           const loanAmount = window.web3.utils.toWei(this.loanAmount.value.toString(), 'Ether')
-          this.props.createContract()
+          this.createContract(this.props.account, loanAmount, earnings, capital)
         }}>
           <div className="form-group mr-sm-2">
             <input
@@ -100,6 +96,32 @@ class Main extends Component {
         </table> */}
       </div>
     );
+  }
+
+  createContractInner(bankaccount, account, loanAmount, earnings, capital) {
+    const MyContract = contract(MyContractJSON)
+    MyContract.setProvider(window.web3.currentProvider)
+
+    //uses random for now
+    const credit = this.genCredit()
+    console.log(bankaccount)
+    console.log(account)
+    console.log(loanAmount)
+    console.log(earnings)
+    console.log(credit)
+    console.log(capital)
+    console.log()
+
+    MyContract.new(bankaccount, account, loanAmount, earnings, credit, capital, { from: account }).then(instance => {
+      console.log('contract created! :)')
+    }).catch(err => {
+      console.log('error', err)
+    })
+  }
+
+  genCredit() {
+    //random from ABCD
+    return ['A', 'B', 'C', 'D'][Math.floor(Math.random() * 4)]
   }
 }
 
