@@ -2,9 +2,6 @@ pragma solidity >=0.4.24;
 
 import "./SafeMath.sol";
 
-/*
-This set of code is to depict the transaction of goods from the exporter, shipper & importer
-*/
 contract CorporateLending {
     using SafeMath for uint256;
 
@@ -124,13 +121,16 @@ contract CorporateLending {
         loanStatus = loanStatusArray[3];
     }
 
-    function transactCollateral() public payable {
-        // require it to be client
-        require(equal(loanStatus,loanStatusArray[1]) && msg.sender == client, errMsg[0]);
+    // function transactCollateral() public payable {
+    //     // require it to be client
+    //     require(equal(loanStatus,loanStatusArray[1]) && msg.sender == client, errMsg[0]);
 
-        bank.transfer(clientObj.collateralVal);
+    //     // Instead of transact ether to the bank, our group decide to use real world collaterals
+    //     // bank.transfer(clientObj.collateralVal);
 
-    }
+    //     // Set the description of the collatra
+
+    // }
 
     function drawdown() public payable{
         require(equal(loanStatus,loanStatusArray[3]) && msg.sender == bank, errMsg[0]);
