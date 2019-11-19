@@ -65,7 +65,7 @@ contract CorporateLending {
         clientObj = Client({
             addr: client,
             risk: 0,
-            riskClass: "",
+            riskClass: "pending",
             collateralVal: 0,
             kyc: KYC({
                 capital: capitalVal,
@@ -134,6 +134,7 @@ contract CorporateLending {
 
     function drawdown() public payable{
         require(equal(loanStatus,loanStatusArray[3]) && msg.sender == bank, errMsg[0]);
+        
         // Loan drawdown - Transaction from bank to client
         client.transfer(loanValue);
 
@@ -145,7 +146,7 @@ contract CorporateLending {
     function repay() public payable{
         require(equal(loanStatus,loanStatusArray[4]) && msg.sender == client, errMsg[0]);
         // Repayment from client to bank
-        client.transfer(SafeMath.add(SafeMath.mul(loanValue, interestRate), loanValue));
+        bank.transfer(SafeMath.add(SafeMath.mul(loanValue, interestRate), loanValue));
 
         // set state to REPAID
         loanStatus = loanStatusArray[5];
@@ -163,6 +164,13 @@ contract CorporateLending {
         return clientObj.collateralVal;
     }
 
+    function getLoanAmount() public returns (uint256){
+        return loanValue;
+    }
+
+    function getClientAddress() public returns (address){
+        return client;
+    }
 
     function equal(string memory _a, string memory _b) private pure returns (bool) {
         return (keccak256(abi.encode(_a)) == keccak256(abi.encode(_b)));

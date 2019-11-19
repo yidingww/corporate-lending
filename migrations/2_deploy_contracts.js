@@ -1,3 +1,3 @@
-const metacoin = artifacts.require("Metacoin");
-
-module.exports = function(deployer) {};
+const CorporateLending = artifacts.require("CorporateLending");
+module.exports = function(deployer) {
+};

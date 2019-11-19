@@ -1,119 +1,159 @@
 import React, { Component } from 'react';
+import './App.css';
+import { writeFileSync } from 'fs';
 const contract = require('@truffle/contract')
 const MyContractJSON = require('../abis/CorporateLending.json')
 const Web3 = require("web3")
-
+const MyContract = contract(MyContractJSON)
+MyContract.setProvider(window.web3.currentProvider)
 
 class Main extends Component {
 
-  createContract = (account, loanAmount, earnings, capital) => {
-    const web3=new Web3("http://localhost:8545")
+  constructor(props) {
+    super(props)
+    this.state = {
+      address: null,
+      status: null,
+      risk: null,
+      collateral: null,
+      loanAmount: null,
+    }
+  }
+
+  handleSearch = (event) => {
+    event.preventDefault()
+    const contractAddress = this.contractAddress.value
+    MyContract.at(contractAddress).then(instance => {
+      this.setState({ address: instance.address })
+      instance.getLoanStatus.call().then(val => this.setState({ status: val }))
+      instance.getRisk.call().then(val => this.setState({ risk: val }))
+      instance.getCollateral.call().then(val => this.setState({ collateral: "" + Web3.utils.fromWei(val, 'ether')  }))
+      instance.getLoanAmount.call().then(val => this.setState({ loanAmount: "" + Web3.utils.fromWei(val, 'ether')  }))
+    }).catch(err => console.log("ERROR: ", err))
+  }
+
+  createContract = (account, loanAmount, maturity, earnings, capital) => {
+    const web3 = new Web3("http://localhost:8545")
     web3.eth.getAccounts().then(accounts => {
       //accounts[2] is the lender/bank's account
-      console.log(accounts,"----------------------------------------")
-      this.createContractInner(accounts[2], account, loanAmount, earnings, capital)
+      console.log(accounts, "----------------------------------------")
+      this.createContractInner(accounts[2], account, loanAmount, maturity, earnings, capital)
     })
   }
 
+  handleSubmit = (event) => {
+    event.preventDefault()
+    const earnings = this.earnings.value
+    const capital = this.capital.value
+    // const loanAmount = window.web3.utils.toWei(this.loanAmount.value.toString(), 'Ether')
+    const loanAmount = this.loanAmount.value
+    const maturity = this.maturity.value
+    this.createContract(this.props.account, loanAmount, maturity, earnings, capital)
+  }
+
+
   render() {
     return (
-      <div id="content">
-        <h1>Application</h1>
-        <form onSubmit={(event) => {
-          event.preventDefault()
-          const earnings = this.earnings.value
-          const capital = this.capital.value
-          const loanAmount = window.web3.utils.toWei(this.loanAmount.value.toString(), 'Ether')
-          this.createContract(this.props.account, loanAmount, earnings, capital)
-        }}>
-          <div className="form-group mr-sm-2">
+      <div className="container">
+        <div className="row">
+          <div className="col-md-6">
+            <h3>Application</h3>
+            <form onSubmit={this.handleSubmit}>
+              <div className="form-group mr-sm-2">
+                Company Earnings
             <input
-              id="earnings"
-              type="text"
-              ref={(input) => { this.earnings = input }}
-              className="form-control"
-              placeholder="Earnings"
-              required />
-          </div>
-          <div className="form-group mr-sm-2">
+                  id="earnings"
+                  type="text"
+                  ref={(input) => { this.earnings = input }}
+                  className="form-control"
+                  placeholder="in thousands"
+                  required />
+              </div>
+              <div className="form-group mr-sm-2">
+                Capital Amount
             <input
-              id="capital"
-              type="text"
-              ref={(input) => { this.capital = input }}
-              className="form-control"
-              placeholder="Capital"
-              required />
-          </div>
-          <div className="form-group mr-sm-2">
+                  id="capital"
+                  type="text"
+                  ref={(input) => { this.capital = input }}
+                  className="form-control"
+                  placeholder="Capital"
+                  required />
+              </div>
+              <div className="form-group mr-sm-2">
+                Loan Amount
             <input
-              id="loanAmount"
-              type="text"
-              ref={(input) => { this.loanAmount = input }}
-              className="form-control"
-              placeholder="Loan Amount"
-              required />
-          </div>
-          <button type="submit" className="btn btn-primary" onClick={this.createContract()}>Submit Application</button>
-        </form>
-        {/* <p>&nbsp;</p>
-        <h2>Buy Product</h2>
-        <table className="table">
-          <thead>
-            <tr>
-              <th scope="col">#</th>
-              <th scope="col">Name</th>
-              <th scope="col">Price</th>
-              <th scope="col">Owner</th>
-              <th scope="col"></th>
-            </tr>
-          </thead>
-          <tbody id="productList">
-            { this.props.products.map((product, key) => {
-              return(
-                <tr key={key}>
-                  <th scope="row">{product.id.toString()}</th>
-                  <td>{product.name}</td>
-                  <td>{window.web3.utils.fromWei(product.price.toString(), 'Ether')} Eth</td>
-                  <td>{product.owner}</td>
-                  <td>
-                    { !product.purchased
-                      ? <button
-                          name={product.id}
-                          value={product.price}
-                          onClick={(event) => {
-                            this.props.purchaseProduct(event.target.name, event.target.value)
-                          }}
-                        >
-                          Buy
-                        </button>
-                      : null
-                    }
-                    </td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table> */}
+                  id="loanAmount"
+                  type="text"
+                  ref={(input) => { this.loanAmount = input }}
+                  className="form-control"
+                  placeholder="Loan Amount"
+                  required />
+              </div>
+              <div className="form-group mr-sm-2">
+                Maturity
+            <input
+                  id="maturity"
+                  type="text"
+                  ref={(input) => { this.maturity = input }}
+                  className="form-control"
+                  placeholder="maturity"
+                  required />
+              </div>
+              <button type="submit" className="btn btn-primary">Submit Application</button>
+            </form>
+          </div >
+
+          <div className="col-md-6">
+            Search Previous Contracts:
+              <form onSubmit={this.handleSearch}>
+
+              <input
+                id="contractAddress"
+                type="text"
+                ref={(input) => { this.contractAddress = input }}
+                className="form-control"
+                placeholder="0x....."
+                required />
+              <button type="submit" className="btn btn-primary">Search Contract</button>
+            </form>
+            <br></br>
+            <div>
+              {this.state.status ?
+                <ul>
+                  Contract Info:
+                            <li>Address: {this.state.address}</li>
+                  <li>Status: {this.state.status}</li>
+                  <li>Risk: {this.state.risk}</li>
+                  <li>Collateral: {this.state.collateral} ether</li>
+                  <li>Loan amount: {this.state.loanAmount} ether</li>
+                </ul>
+                : " "
+              }
+            </div>
+          </div >
+
+        </div >
       </div>
+
     );
   }
 
-  createContractInner(bankaccount, account, loanAmount, earnings, capital) {
+  createContractInner(bankaccount, account, loanAmount, maturity, earnings, capital) {
     const MyContract = contract(MyContractJSON)
     MyContract.setProvider(window.web3.currentProvider)
 
     //uses random for now
     const credit = this.genCredit()
-    console.log(bankaccount)
-    console.log(account)
-    console.log(loanAmount)
-    console.log(earnings)
-    console.log(credit)
-    console.log(capital)
-    console.log()
+    console.log('bankaccount: ' + bankaccount)
+    console.log('account' + account)
+    console.log('loanAmount' + loanAmount)
+    console.log('maturity' + maturity)
+    console.log('earnings' + earnings)
+    console.log('credit' + credit)
+    console.log('capital' + capital)
 
-    MyContract.new(bankaccount, account, loanAmount, earnings, credit, capital, { from: account }).then(instance => {
-      console.log('contract created! :)')
+    MyContract.new(bankaccount, account, loanAmount, maturity, earnings, credit, capital, { from: account }).then(instance => {
+      console.log('contract created! at ' + instance.address)
     }).catch(err => {
       console.log('error', err)
     })

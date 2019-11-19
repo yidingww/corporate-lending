@@ -3,6 +3,7 @@ import Web3 from 'web3'
 import './App.css';
 import Navbar from './Navbar'
 import Main from './Main'
+import BankMain from './BankMain'
 
 
 class App extends Component {
@@ -45,31 +46,18 @@ class App extends Component {
         // Load account
         const accounts = await web3.eth.getAccounts()
         this.setState({ account: accounts[0] })
-        const networkId = await web3.eth.net.getId()
-        // const networkData = Marketplace.networks[networkId]
-        // if (networkData) {
-        //     const marketplace = web3.eth.Contract(Marketplace.abi, networkData.address)
-        //     this.setState({ marketplace })
-        //     const productCount = await marketplace.methods.productCount().call()
-        //     this.setState({ productCount })
-        //     // Load products
-        //     for (var i = 1; i <= productCount; i++) {
-        //         const product = await marketplace.methods.products(i).call()
-        //         this.setState({
-        //             products: [...this.state.products, product]
-        //         })
-        //     }
-        //     this.setState({ loading: false })
-        // } else {
-        //     window.alert('Marketplace contract not deployed to detected network.')
-        // }
+
+        new Web3("http://localhost:8545").eth.getAccounts().then(accounts => {
+            this.setState({ isBank: accounts[2] === this.state.account })
+        })
     }
 
     constructor(props) {
         super(props)
         this.state = {
             account: '',
-            loading: false
+            loading: false,
+            isBank: false,
         }
     }
 
@@ -78,17 +66,16 @@ class App extends Component {
             <div>
                 <Navbar account={this.state.account} />
                 <div className="container-fluid mt-5">
-                    <div className="row">
-                        <main role="main" className="col-lg-12 d-flex">
-                            {this.state.loading
-                                ? <div id="loader" className="text-center"><p className="text-center">Loading...</p></div>
-                                : <Main 
-                                    account={this.state.account}
-                                    />
-                            }
-                            {/* <button onClick={this.createContract(this.state.account)}>Create Contract</button> */}
-                        </main>
-                    </div>
+
+
+                    <main role="main" className="col-lg-12 d-flex">
+                        {this.state.isBank ?
+                            <BankMain account={this.state.account} />
+                            :<Main account={this.state.account} />
+                        }
+                    </main>
+
+
                 </div>
             </div>
         );
