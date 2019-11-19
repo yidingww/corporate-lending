@@ -8,14 +8,15 @@ This set of code is to depict the transaction of goods from the exporter, shippe
 contract CorporateLending {
     using SafeMath for uint256;
 
-    address bank;
-    address client;
+    address payable bank;
+    address payable client;
     string public loanStatus;
     string[] loanStatusArray;
     string[] errMsg;
     uint256 loanValue;
     uint256 interestRate;
-    uint256 stockPrice; 
+    uint256 stockPrice;
+    uint256 maturity;
 
     Client clientObj;
 
@@ -39,7 +40,7 @@ contract CorporateLending {
     }
 
 
-    constructor( address bankAddr, address clientAddr, uint256 loanVal,
+    constructor( address payable bankAddr, address payable clientAddr, uint256 loanVal, uint256 maturityVal,
         uint256 earningsVal, string memory creditR, uint256 capitalVal ) public {
 
         loanStatusArray = ["INITIATED", "EVALUATED", "PRICED", "SIGNED", "ACTIVE", "REPAID", "FORECLOSURE", "REJECTED"];
@@ -56,10 +57,11 @@ contract CorporateLending {
         client = clientAddr;
         loanValue = SafeMath.mul(loanVal, 1 ether); // Stores ether value as wei
         loanStatus = loanStatusArray[0];
+        maturity = maturityVal;
 
         // Assume interest rate and stock price are derived from Oracle data source
         interestRate = 10;
-        stockPrice = 1000;
+        stockPrice = 10;
 
 
         // Assume KYC is already done, so when the contract is initiated, the information will be automatically loaded
@@ -121,13 +123,19 @@ contract CorporateLending {
         // Set state to SIGNED, because step "PRICING" and "SIGN" are skipped
         loanStatus = loanStatusArray[3];
     }
+
+    function transactCollateral() public payable {
+        // require it to be client
+        require(equal(loanStatus,loanStatusArray[1]) && msg.sender == client, errMsg[0]);
+
+        bank.transfer(clientObj.collateralVal);
+
+    }
+
     function drawdown() public payable{
         require(equal(loanStatus,loanStatusArray[3]) && msg.sender == bank, errMsg[0]);
         // Loan drawdown - Transaction from bank to client
-
-
-        // Transaction of collateral from client to bank
-
+        client.transfer(loanValue);
 
         // set state to ACTIVE
         loanStatus = loanStatusArray[4];
@@ -137,7 +145,7 @@ contract CorporateLending {
     function repay() public payable{
         require(equal(loanStatus,loanStatusArray[4]) && msg.sender == client, errMsg[0]);
         // Repayment from client to bank
-
+        client.transfer(SafeMath.add(SafeMath.mul(loanValue, interestRate), loanValue));
 
         // set state to REPAID
         loanStatus = loanStatusArray[5];
